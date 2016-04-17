@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<!--
+    Copyright (c) 2012-2016 Adobe Systems Incorporated. All rights reserved.
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+    <!-- This is a wide open CSP declaration. To lock this down for production, see below. -->
+    <!-- Good default declaration:
+    * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+    * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+    * Disables use of eval() and inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+        * Enable inline JS: add 'unsafe-inline' to default-src
+        * Enable eval(): add 'unsafe-eval' to default-src
+    * Create your own at http://cspisawesome.com
+    -->
+
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+<link rel="stylesheet" href="//code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <title>Hello World</title>
+</head>
+
+<body>
+<h1>Beacon</h1>
+    <div class="app">
+        <div id="beacon-request-div">
+		<div id="init">
+			<div class="wifi-symbol">
+  				<div class="wifi-circle fourth">
+				</div>
+			</div>
+		</div>
+
+		<div id="charging" style="display:none">
+			<div class="wifi-symbol">
+  				<div class="wifi-circle first"></div>
+  				<div class="wifi-circle second"></div>
+  				<div class="wifi-circle third"></div>	
+  				<div class="wifi-circle fourth"></div>
+			</div>
+		</div>
+        	<span id="test" style="display:none">hello world</span>
+    	</div>
+        <div id="helper-div" style="display:none">
+        	<div id="map" style="margin-top:40%;padding:0;width:100%;height:80%"></div>
+        </div>
+    </div>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+    <script src="js/hammer.min.js"></script>
+    <script src="http://128.105.35.53:8080/socket.io/socket.io.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBUowzcE8D1uSH5299QC6tLyahkL2EmAYk"></script>
+    <script type="text/javascript">
+        var socketio = io.connect("http://128.105.35.53:8080");
+	var directionsService = new google.maps.DirectionsService();
+	var directionsDisplay;
+	var map;
+        var device_uuid = '';
+        document.addEventListener("deviceready", onDeviceReady, false);
+        function onDeviceReady() {
+          device_uuid = device.uuid
+          socketio.emit("join", {device: device_uuid});
+        }
+        app.initialize();
+        var tap_div = document.getElementById('init')
+        var hammer_obj = new Hammer(tap_div)
+        hammer_obj.on('tap', function(ev) {
+            document.getElementById('init').style.display = "none";
+            document.getElementById('charging').style.display = "inline";
+            function onSuccess(position) {
+                var msg = {"device" : device_uuid, "lat" : position.coords.latitude, "long" : position.coords.longitude}
+                socketio.emit("beacon_request", {message : msg});                 
+            }
+
+            function onError(error) {
+              alert('code: '    + error.code    + '\n' +
+                    'message: ' + error.message + '\n');
+            }
+
+            navigator.geolocation.getCurrentPosition(onSuccess, onError, {timeout:20000});
+        })
+         
+        socketio.on("help_request", function(data) {
+         	function onSuccess(position) {
+                        document.getElementById('beacon-request-div').style.display = 'none';
+                        document.getElementById('helper-div').style.display = 'inline';
+        		directionsDisplay = new google.maps.DirectionsRenderer();
+			var Center = new google.maps.LatLng(43.071476, -89.407008);
+  			var properties = {
+    				center: Center,
+    				zoom: 20,
+  			};
+
+  			map = new google.maps.Map(document.getElementById("map"), properties);
+  			directionsDisplay.setMap(map);
+
+  			var marker = new google.maps.Marker({
+    				position: Center,
+    				animation: google.maps.Animation.BOUNCE,
+  			});
+
+  			marker.setMap(map);                
+			var start = new google.maps.LatLng(43.071476, -89.407008);
+  			var end = new google.maps.LatLng(43.071476, -89.457008);
+  			var request = {
+    				origin: start,
+    				destination: end,
+    				travelMode: google.maps.TravelMode.WALKING
+  			};
+  			directionsService.route(request, function(result, status) {
+    				if (status == google.maps.DirectionsStatus.OK) {
+      					directionsDisplay.setDirections(result);
+    				} else {
+      					alert("couldn't get directions:" + status);
+    				}
+  			});
+            	}
+
+        	function onError(error) {
+            	  	alert('code: '    + error.code    + '\n' +
+                	    'message: ' + error.message + '\n');
+            	}
+
+            	navigator.geolocation.getCurrentPosition(onSuccess, onError, {timeout:10000})
+        });
+
+        function send_heartbeat_msg() {
+            function onSuccess(position) {
+                var msg = {"device" : device_uuid, "lat" : position.coords.latitude, "long" : position.coords.longitude}
+                socketio.emit("heartbeat", {message : msg});
+            }
+
+            function onError(error) {
+              alert('code: '    + error.code    + '\n' +
+                    'message: ' + error.message + '\n');
+            }
+
+            navigator.geolocation.getCurrentPosition(onSuccess, onError, {timeout:10000});
+        }
+        setInterval(send_heartbeat_msg, 10000);
+    </script>
+</body>
+
+</html>

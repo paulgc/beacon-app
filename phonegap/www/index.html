@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<!--
+    Copyright (c) 2012-2016 Adobe Systems Incorporated. All rights reserved.
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+    <!-- This is a wide open CSP declaration. To lock this down for production, see below. -->
+    <!-- Good default declaration:
+    * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+    * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+    * Disables use of eval() and inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+        * Enable inline JS: add 'unsafe-inline' to default-src
+        * Enable eval(): add 'unsafe-eval' to default-src
+    * Create your own at http://cspisawesome.com
+    -->
+
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+<link rel="stylesheet" href="//code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <title>Hello World</title>
+</head>
+
+<body>
+    <div class="app">
+        <div id="logo">
+		<center>
+			<img src="img/logo.png">
+		</center>
+	</div> 
+                <div style="margin-top:70px" id="beacon-msg">
+                        <center>
+				<div id="init-msg">
+                                	<img src='img/tap1.png'>
+				</div>
+				<div id="prepare-msg" style="display:none">
+					<img src='img/prepare1.png'>
+				</div>
+				<div id="broadcast-msg" style="display:none">
+					<img src='img/broadcast1.png'>
+				</div>
+                        </center>
+                </div>
+        <div id="beacon-request-div">
+        <div id="init">
+                <div class="wifi-symbol">
+                    <div class="wifi-circle static-first"></div>
+                    <div class="wifi-circle static-second"></div>
+                    <div class="wifi-circle static-third"></div>
+                    <div class="wifi-circle static-fourth"></div>
+                </div>
+	</div>
+
+            <div id="charging" style="display:none">
+                <div class="wifi-symbol">
+                            <div class="wifi-circle charging-first"></div>
+                            <div class="wifi-circle charging-second"></div>
+                            <div class="wifi-circle charging-third"></div>
+                            <div class="wifi-circle charging-fourth"></div>
+                </div>
+            </div>
+
+            <div id="active" style="display:none">
+                <div class="wifi-symbol">
+                    <div class="wifi-circle active-first"></div>
+                    <div class="wifi-circle active-second"></div>
+                    <div class="wifi-circle active-third"></div>
+                    <div class="wifi-circle active-fourth"></div>
+                </div>
+            </div>
+    	</div>
+
+        <div id="helper-div" style="display:none">
+                <div style="margin-top:10px;"><center><img src='img/help_button.png'></center></div>
+        	<div id="map" style="margin-top:10px;"></div>
+                <div id="helper-controls">
+			<center>
+                		<table border="0" cellspacing="20">
+					<tr>
+						<td>
+							<img src='img/accept_button.png' onclick="accept_help_request()">
+						</td>
+						<td>
+							<img src='img/reject_button.png' onclick="reject_help_request()">
+						</td>
+					</tr>
+				</table>
+                	</center>
+		</div>
+                <div id="accepted-helper-controls" style="display:none">
+                	<center>
+				<img src='img/reject_button.png' onclick="reject_accepted_help_request()">
+			</center>
+                </div> 
+       </div>
+    </div>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+    <script src="js/hammer.min.js"></script>
+    <script src="http://128.105.35.53:8080/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+        var socketio = io.connect("http://128.105.35.53:8080");
+        var device_uuid = '';
+        document.addEventListener("deviceready", onDeviceReady, false);
+        function onDeviceReady() {
+          device_uuid = device.uuid
+          socketio.emit("join", {device: device_uuid});
+        }
+        app.initialize();
+        var tap_div = document.getElementById('init')
+        var hammer_obj = new Hammer(tap_div)
+        var victim_dev = '';
+        hammer_obj.on('tap', function(ev) {
+            document.getElementById('init').style.display = "none";
+            document.getElementById('charging').style.display = "inline";
+            document.getElementById('init-msg').style.display = "none";
+            document.getElementById('prepare-msg').style.display = "inline";
+            setTimeout(send_beacon_req, 10000);
+            function send_beacon_req() {
+            	function onSuccess(position) {
+                	var msg = {"device" : device_uuid, "lat" : position.coords.latitude, "long" : position.coords.longitude}
+                	socketio.emit("beacon_request", {message : msg});                  
+            	}
+
+            	function onError(error) {
+              		alert('code: '    + error.code    + '\n' +
+                    	'message: ' + error.message + '\n');
+            	}
+                document.getElementById('charging').style.display = "none";
+                document.getElementById('active').style.display = "inline";
+                document.getElementById('prepare-msg').style.display = "none";
+                document.getElementById('broadcast-msg').style.display = "inline";
+            	navigator.geolocation.getCurrentPosition(onSuccess, onError, {timeout:20000});
+	    }
+        })
+         
+        socketio.on("help_request", function(data) {
+         	function onSuccess(position) {
+                        document.getElementById('beacon-request-div').style.display = 'none';
+                        document.getElementById('beacon-msg').style.display = 'none';
+                        document.getElementById('helper-div').style.display = 'inline';
+			victim_dev = data['message']['victim']
+                        document.getElementById('map').innerHTML = '<iframe width="100%" height="400px" frameborder="0" style="border:0" src="https://www.google.com/maps/embed/v1/directions?key=AIzaSyDcxbvfYTNSbTI_miPpDyjklWMJjmXA2gc&origin=' + position.coords.latitude + ',' + position.coords.longitude + '&destination=' + data['message']['lat'] + ',' + data['message']['long'] + '" allowfullscreen></iframe>';
+
+             	}
+
+        	function onError(error) {
+            	  	alert('code: '    + error.code    + '\n' +
+                	    'message: ' + error.message + '\n');
+            	}
+
+            	navigator.geolocation.getCurrentPosition(onSuccess, onError, {timeout:10000})
+        });
+
+        function send_heartbeat_msg() {
+            function onSuccess(position) {
+                var msg = {"device" : device_uuid, "lat" : position.coords.latitude, "long" : position.coords.longitude}
+                socketio.emit("heartbeat", {message : msg});
+            }
+
+            function onError(error) {
+              alert('code: '    + error.code    + '\n' +
+                    'message: ' + error.message + '\n');
+            }
+
+            navigator.geolocation.getCurrentPosition(onSuccess, onError, {timeout:10000});
+        }
+
+        setInterval(send_heartbeat_msg, 10000);
+
+        function accept_help_request() {
+		document.getElementById('helper-controls').style.display = 'none';
+                document.getElementById('accepted-helper-controls').style.display = 'inline';
+                var msg = {"device" : device_uuid, "victim" : victim_dev};
+		socketio.emit("accept_help_request", {message : msg});
+	}
+
+        function reject_help_request() {
+                document.getElementById('beacon-request-div').style.display = 'inline';
+                document.getElementById('beacon-msg').style.display = 'inline';
+        	document.getElementById('helper-div').style.display = 'none';
+                var msg = {"device" : device_uuid, "victim" : victim_dev};
+                socketio.emit("reject_help_request", {message : msg});
+        }
+
+        function reject_accepted_help_request() {
+                document.getElementById('beacon-request-div').style.display = 'inline';
+	        document.getElementById('beacon-msg').style.display = 'inline';
+                document.getElementById('helper-div').style.display = 'none';
+                var msg = {"device" : device_uuid, "victim" : victim_dev};
+                socketio.emit("reject_accepted_help_request", {message : msg});
+        }
+    </script>
+</body>
+
+</html>

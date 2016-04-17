@@ -1,0 +1,190 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+* {
+    -webkit-tap-highlight-color: rgba(0,0,0,0); /* make transparent link selection, adjust last value opacity 0 to 1.0 */
+}
+
+body {
+background-color: lightblue;
+}
+
+#beacon-request-div {
+    position:absolute;            /*  position in the center of the screen */
+    left:48%;
+    top:45%;
+}
+
+.wifi-symbol {
+  display: none;
+}
+.wifi-symbol [foo], .wifi-symbol {
+  display: block;
+  position: absolute;
+  top: 50%;
+  display: inline-block;
+  width: 150px;
+  height: 150px;
+  margin-top: -187.5px;
+  -ms-transform: rotate(-45deg) translate(-100px);
+  -moz-transform: rotate(-45deg) translate(-100px);
+  -o-transform: rotate(-45deg) translate(-100px);
+  -webkit-transform: rotate(-45deg) translate(-100px);
+  transform: rotate(-45deg) translate(-100px);
+}
+.wifi-symbol .wifi-circle {
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-size: 21.42857px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-color: #FFFFCC;
+  border-style: solid;
+  border-width: 1em 1em 0 0;
+  -webkit-border-radius: 0 100% 0 0;
+  border-radius: 0 100% 0 0;
+  opacity: 0;
+  -o-animation: wifianimation 3s infinite;
+  -moz-animation: wifianimation 3s infinite;
+  -webkit-animation: wifianimation 3s infinite;
+  animation: wifianimation 3s infinite;
+}
+.wifi-symbol .wifi-circle.first {
+  -o-animation-delay: 800ms;
+  -moz-animation-delay: 800ms;
+  -webkit-animation-delay: 800ms;
+  animation-delay: 800ms;
+}
+.wifi-symbol .wifi-circle.second {
+  width: 5em;
+  height: 5em;
+  -o-animation-delay: 400ms;
+  -moz-animation-delay: 400ms;
+  -webkit-animation-delay: 400ms;
+  animation-delay: 400ms;
+}
+.wifi-symbol .wifi-circle.third {
+  width: 3em;
+  height: 3em;
+}
+.wifi-symbol .wifi-circle.fourth {
+  width: 1em;
+  height: 1em;
+  opacity: 1;
+  background-color: #FFFFCC;
+  -o-animation: none;
+  -moz-animation: none;
+  -webkit-animation: none;
+  animation: none;
+}
+
+@-o-keyframes wifianimation {
+  0% {
+    opacity: 0.4;
+  }
+  5% {
+    opactiy: 1;
+  }
+  6% {
+    opactiy: 0.1;
+  }
+  100% {
+    opactiy: 0.1;
+  }
+}
+@-moz-keyframes wifianimation {
+  0% {
+    opacity: 0.4;
+  }
+  5% {
+    opactiy: 1;
+  }
+  6% {
+    opactiy: 0.1;
+  }
+  100% {
+    opactiy: 0.1;
+  }
+}
+@-webkit-keyframes wifianimation {
+  0% {
+    opacity: 0.4;
+  }
+  5% {
+    opactiy: 1;
+  }
+  6% {
+    opactiy: 0.1;
+  }
+  100% {
+    opactiy: 0.1;
+  }
+}
+
+/* Landscape layout (with min-width) */
+@media screen and (min-aspect-ratio: 1/1) and (min-width:400px) {
+}
+
+h1 {
+    font-size:48px;
+    font-weight:normal;
+    margin:0px;
+    overflow:visible;
+    padding:0px;
+    text-align:center;
+}
+
+.event {
+    border-radius:4px;
+    -webkit-border-radius:4px;
+    color:#FFFFFF;
+    font-size:12px;
+    margin:0px 30px;
+    padding:2px 0px;
+}
+
+.event.listening {
+    background-color:#333333;
+    display:block;
+}
+
+.event.received {
+    background-color:#4B946A;
+    display:none;
+}
+
+@keyframes fade {
+    from { opacity: 1.0; }
+    50% { opacity: 0.4; }
+    to { opacity: 1.0; }
+}
+ 
+@-webkit-keyframes fade {
+    from { opacity: 1.0; }
+    50% { opacity: 0.4; }
+    to { opacity: 1.0; }
+}
+ 
+.blink {
+    animation:fade 3000ms infinite;
+    -webkit-animation:fade 3000ms infinite;
+}
